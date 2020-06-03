@@ -138,109 +138,11 @@ public class AnalysisSSEForm extends JFrame implements ActionListener{
 	}
 	public void actionPerformed(ActionEvent e){
 		
-		if(e.getSource()==exitBut){
-			this.dispose();
-		}
-		else if(e.getSource()==sseBtn){
-			
-			int methodchoiceIndex=methodCombo.getSelectedIndex();
-			
-			//SSE			
-				String knumber=kcb.getText().trim();
-				name=filenames.getText().trim();
-				String dir=directory.getText().trim();
-				if(knumber.equals("") && name.equals("") && dir.equals("")){
-					JOptionPane.showMessageDialog(null,"Enter cluster number,file name and its directory.");
-				}
-				else{					
-						int knum=Integer.parseInt(knumber);					
-						String[] filenames=new String[knum];
-						for(int i=0;i<knum;i++)
-						{
-							String fullfile=dir+"\\"+name+"-"+(i+1)+".csv";
-							filenames[i]=fullfile;					
-						}
-					if(methodchoiceIndex==0){//SSE
-						//Start SSE
-						CalculateSSE(filenames);
-						Font font=new Font("Times News Romen",Font.PLAIN,14);
-						outputArea.setFont(font);
-						outputArea.setText(output);
-					}
-					else{//Sillohute
-						output="";
-						HashMap<Integer,float[][]> clusterValues=GetData(filenames);
-						//PrintClusterValues(clusterValues);
-						CalculateSillhouette(clusterValues);
-					}
-				}//data input else						
-		}
-		else if(e.getSource()==saveBut){
-			int methodchoiceIndex=methodCombo.getSelectedIndex();
-			String str="";
-			if(methodchoiceIndex==0){
-				 str="D:\\"+name+"_SSE_Cal.txt";			
-			}
-			else {//sillhoute
-				str="D:\\"+name+"_Sillhoueette_Cal.txt";		
-			}
-			try{    
-		           FileWriter fw=new FileWriter(str);    
-		           fw.write(output);    
-		           fw.close();    
-		           JOptionPane.showMessageDialog(null,"File is saved into "+str+".");
-		    }
-			catch(Exception ex){//System.out.println(ex.getMessage());}    
-		     JOptionPane.showMessageDialog(null, "SSE step by step calculations are saved in the file \""+str+"\".");
-			}
-		}
+		
 	}
 	
 	void CalculateSillhouette(HashMap<Integer,float[][]> values){
-		 Iterator it=values.entrySet().iterator();
-		 float[] bValueCluster=new float[values.size()-1];
-		 float[] finalSillhouteValue=new float[values.size()];
 		 
-		 while(it.hasNext()){
-			 Map.Entry pair=(Map.Entry)it.next();
-			 int index=(Integer) pair.getKey();	
-			 output+="********************Cluster -"+(index+1)+"*******************\n";
-			 float[][] data1=(float[][]) pair.getValue();			 
-			 int rCount=data1.length;
-			 int cCount=data1[0].length;
-			 float[] clusterValue=new float[rCount];
-			 for(int i=0;i<rCount;i++){
-				 float[] AData=GetAData(i,data1,rCount,cCount);
-				 
-				 float AValue=CalcualteA0(i,data1,rCount,cCount);
-				 Iterator it1=values.entrySet().iterator();
-				 int bIndex=0;
-				 while(it1.hasNext()){
-					 Map.Entry pair1=(Map.Entry)it1.next();
-					 int index1=(Integer) pair1.getKey();			 
-					 if(index!=index1){		
-						 output+="\n..........Cluster"+(index1+1)+"..........\n";
-						 float[][] data2=(float[][]) pair1.getValue();	
-						 bValueCluster[bIndex]=CalculateBValues(AData,data2,i,(Integer)pair1.getKey());	
-						 output+="B value="+bValueCluster[bIndex]+"\n";
-						 ++bIndex;
-					 }
-				 }//inner while
-				 //Find Min Value
-				 float minbValue=FindMinValue(bValueCluster);
-				 //Calculate s(0)
-				 float finalValue=CalculateSZero(AValue,minbValue,i);
-				 clusterValue[i]=finalValue;
-			 }//end of for i
-			 float vv1=CalculateFinalValueForCluster(clusterValue,index);
-			 finalSillhouteValue[index]=vv1;
-		 }//outer while
-		 
-		 
-		 FindFinalSCValue(finalSillhouteValue);
-		 outputArea.setText(output);
-		 
-		 //System.out.println(output);
 	}
 	void FindFinalSCValue(float[] vv){
 		output+="\nFinal Values for all clusters............................\n";
@@ -302,43 +204,7 @@ public class AnalysisSSEForm extends JFrame implements ActionListener{
 	}
 	
 	float CalculateBValues(float[] AData,float[][] dataofB,int indexOfA,int clusterIndex){
-		int rCount=dataofB.length;
-		int cCount=dataofB[0].length;
-		float[] values=new float[rCount];
-		String letter=GetClusterLetter(clusterIndex);
 		
-		for(int i=0;i<rCount;i++){
-			String temp="";			
-				temp+="Dis("+letter+(i+1)+","+"A"+(indexOfA+1)+") =";
-				//Find Distance
-				float sum=0.0f;
-				for(int j=0;j<cCount;j++){
-					float value=dataofB[i][j]-AData[j];
-					value=value*value;
-					sum+=value;
-					temp+="("+dataofB[i][j]+"-"+AData[j]+")^2+";
-				}//column
-				values[i]=(float) Math.sqrt(sum);
-				values[i]=Float.parseFloat(df2.format(values[i]));
-				temp=temp.substring(0,temp.length()-1);
-				temp+=" = Sqrt("+sum+")="+values[i]+"\n";
-			
-			output+=temp;
-		
-		}
-		
-		//Calculate B(0)
-		output+="\nB(0)=(";
-		float sum=0.0f;
-		for(int i=0;i<values.length;i++){
-			sum+=values[i];
-			output+=values[i]+"+";
-		}
-		output=output.substring(0,output.length()-1);	
-		float bValue=(float)sum/(values.length);
-		bValue=Float.parseFloat(df2.format(bValue));
-		output+=")/"+(values.length)+"="+bValue+"\n";
-		return bValue;
 	}
 	float[] GetAData(int index,float[][] data,int rCount,int cCount){
 		float[] AData=new float[cCount];
@@ -414,29 +280,6 @@ public class AnalysisSSEForm extends JFrame implements ActionListener{
 	}
 	
 	void CalculateSSE(String[] fnames){
-		float[] SSEValue=new float[fnames.length];
-		int fileCount=fnames.length;
-		for(int i=0;i<fileCount;i++){
-			CSVFileRead Rd = new CSVFileRead();
-			File DataFile = new File(fnames[i]);
-			 int[] countData=Rd.GetRowColumn(DataFile);
-			  int rowCount=countData[0];
-			  int colCount=countData[1];
-			  output+="Data Size (row) ="+rowCount+"\t Attribute Count= "+colCount+"\n";	
-			  output+="Importing Data from CSV file.........................";
-			  //System.out.println("Importing Data from CSV file.........................");
-			  float[][] onlyData=Rd.ReadCSVfile(DataFile,rowCount,colCount);
-			  //PrintData(onlyData);			  
-			  dataWithClass=Rd.ReadCSVfileWithClass(DataFile,rowCount,colCount);
-			  PrintDataString(dataWithClass);
-			  
-			  //Find Mean Value
-			  float[] meanValues=MeanValue(onlyData,rowCount,colCount);
-			  SSEValue[i]=CalculateSSEDistance(meanValues,onlyData,rowCount,colCount,i+1);
-			  
-		}//end cluster count for
-		float totalSSE=FindTotalSSE(SSEValue);
-		output+="Total SSE Value (Smaller SSE is better accuracy) = "+totalSSE;
 		
 	}
 	
